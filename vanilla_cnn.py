@@ -212,6 +212,18 @@ class conv_layer:
 	def backprop(self,E,loss,layer_i):
 
 		next_error = np.zeros(self.input.shape)
+		for error_filter_i in range(next_error.shape[0]):
+			for filter_i in range(self.filters_num):
+				for i in range(next_error.shape[1]):
+					for j in range(next_error.shape[2]):
+						E_i1 = (i * self.strides[0] > self.filter_size[0]) * self.filter_size[0] - i
+						E_i2 = i if i * self.strides[0] + self.filter_size[0] == E.shape[0,0] else E.shape[0,0]
+						E_j1 = (j * self.strides[1] > self.filter_size[1]) * self.filter_size[1] - j
+						E_j2 = j if j * self.strides[1] + self.filter_size[1] == E.shape[0,0,0] else E.shape[0,0,0]
+
+						part_E = E[filter_i,E_i1:E_i2,Ej1:Ej2]
+						next_error[error_filter_i] += 
+
 
 		for filter_i in range(self.filters_num):
 			for i in range(self.filters[filter_i].shape[0]):
@@ -224,7 +236,7 @@ class conv_layer:
 
 			pass
 
-		return 0 
+		return next_error
 
 	def convolve2d(self,X,filter,output_dim : tuple):
 
