@@ -23,18 +23,21 @@ class NeuralNetwork:
 		return self.layers[len(self.layers) - 1].output
 
 	def train(self,x_train,y_train,epochs,loss):
-		
+
 			for e in range(epochs):
 				print('epoch', e)
 				for t in range(len(x_train)):
-
 					if t % 1000 == 0:
-						sys.stdout.write(str(t) + '/' + str(len(x_train)) + '\np')
-						sys.stdout.flush()
+					sys.stdout.write(str(t) + '/' + str(len(x_train)) + '\n')
+					sys.stdout.flush()
 						
 					#feed foward
 
-					self.predict(x_train[t])
+					input=x_train[t]
+					if len(input.shape) == 2:
+						input = input.reshape(1,input.shape[0],input.shape[1])
+
+					self.predict(input)
 
 					self.layers.reverse()	
 
@@ -46,13 +49,7 @@ class NeuralNetwork:
 					error = error = self.derivative_errors[loss](targets,self.layers[0].output)
 
 					for layer_i in range(len(self.layers)):
-						if self.layers[layer_i].needsWeights:
-							next_error = np.dot(self.layers[layer_i].W.T,error)
-						
-							self.layers[layer_i].backprop(error,loss,layer_i)
-
-							error = next_error
-							pass
+						error = self.layers[layer_i].backprop(error,loss,layer_i)
 						pass
 					
 					self.layers.reverse()
@@ -115,8 +112,6 @@ class dense_layer:
 
 		self.input = X
 
-		print(self.nodes)
-
 		if not hasattr(self, 'W'): 
 			self.setWeights(self.nodes,self.input.shape[0])
 
@@ -127,12 +122,16 @@ class dense_layer:
 
 	def backprop(self,E,loss,layer_i):
 
+		next_error = np.dot(self.W.T,E)
+
 		if loss == 'crossentropy' and layer_i == 0:	
 			self.W -= self.lr * np.dot(E,np.transpose(self.input))
 		else:
 			self.W -= self.lr * np.dot(E * self.derivatives[self.activation](self.output),np.transpose(self.input))
 
 		pass
+
+		return next_error
 
 	pass
 
@@ -175,7 +174,7 @@ class conv_layer:
 
 		self.input = X
 
-		print(self.input.shape)
+		self.input_shape = X.shape
 
 		image_layers = X.shape[0] 
 
@@ -205,24 +204,25 @@ class conv_layer:
 
 		self.output = self.activation_function(self.output)
 
-		print(self.output.shape)
+		return self.output
 
 		pass
 
 	def backprop(self,E,loss,layer_i):
 
-		next_error = np.zeros(self.input.shape)
+		next_error = np.zeros(self.input_shape)
+
 		for error_filter_i in range(next_error.shape[0]):
 			for filter_i in range(self.filters_num):
+				W = self.dilate(E[filter_i],(self.strides[0] - 1,self.strides[1] - 1))
+				W = self.zeropad(W,((self.filter_size[0] - 1) * 2,(self.filter_size[1] - 1) * 2))
+				current_filter = self.filters[filter_i]
 				for i in range(next_error.shape[1]):
 					for j in range(next_error.shape[2]):
-						E_i1 = (i * self.strides[0] > self.filter_size[0]) * self.filter_size[0] - i
-						E_i2 = i if i * self.strides[0] + self.filter_size[0] == E.shape[0,0] else E.shape[0,0]
-						E_j1 = (j * self.strides[1] > self.filter_size[1]) * self.filter_size[1] - j
-						E_j2 = j if j * self.strides[1] + self.filter_size[1] == E.shape[0,0,0] else E.shape[0,0,0]
-
-						part_E = E[filter_i,E_i1:E_i2,Ej1:Ej2]
-						next_error[error_filter_i] += 
+						part_E = W[i : i + current_filter.shape[0],j : j + current_filter.shape[1]]
+						next_error[error_filter_i,i,j] += np.sum(part_E * np.rot90(current_filter,2)) 
+						pass
+					pass
 
 
 		for filter_i in range(self.filters_num):
@@ -269,12 +269,25 @@ class conv_layer:
 
 		return output
 
+	def dilate(self,X,dilation_size : tuple):
+
+		output = np.zeros((X.shape[0] + (X.shape[0] - 1) * dilation_size[0], X.shape[1] + (X.shape[1] - 1) * dilation_size[1]))
+
+		for i in range(X.shape[0]):
+			for j in range(X.shape[1]):
+				output[i * dilation_size[0] + i,j * dilation_size[1] + j] = X[i,j]
+				pass
+			pass
+
+		return output
+
+
+
 class pooling_layer:
 
 	def __init__(self,type = 'max' ,pooling_size : tuple = (2,2), strides : tuple = (2,2)):
 		
 		self.type = type
-		self.pooling_size = pooling_size
 		self.strides = strides
 		
 		pass
@@ -306,8 +319,7 @@ class pooling_layer:
 
 		self.output = pooled_features
 
-
-
+		return self.output
 		pass
 
 	def backprop(self,E,loss,layer_i):
@@ -365,6 +377,8 @@ class relu_layer:
 
 		self.output = abs(X * (X > 0))
 
+		return self.output
+
 		pass
 
 	def backprop(self,E,loss,layer_i):
@@ -379,6 +393,8 @@ class softmax_layer:
 		self.input = X
 
 		self.output =  np.exp(X - np.max(X)) / np.exp(X - np.max(X)).sum()
+
+		return self.output
 		pass
 
 	def backprop(self,E,loss,layer_i):
@@ -388,47 +404,27 @@ class softmax_layer:
 			return E * self.output * (1 - self.output) 	
 		pass
 
-a = np.random.rand(3,7,7)
-#print(a[0,:,:])
-
-conv2d = conv_layer(5,(3,3),padding = 'same')
-relu = relu_layer()
-pooling = pooling_layer()
-flatten = flatten()
-dense = dense_layer(64,0.001)
-softmax = softmax_layer()
-
-conv2d.feedfoward(a)
-print(conv2d.output[0,:,:])
-relu.feedfoward(conv2d.output)
-print(relu.output[0,:,:])
-pooling.feedfoward(relu.output)
-print(pooling.output[0,:,:])
-e = pooling.backprop(pooling.output,"mse",0)
-e = relu.backprop(e,"mse",0)
-e = conv2d.backprop(e,"mse",0)
-
-print(e)
-
-"""
 #training and testing the network 
 
 nn = NeuralNetwork()
 
+nn.add(conv_layer(64,(2,2),padding='same'))
+nn.add(relu_layer())
 nn.add(flatten())
-nn.add(dense_layer(200,0.014))
-nn.add(dense_layer(10,0.014))
+nn.add(dense_layer(64,0.001))
+nn.add(dense_layer(10,0.001))
+nn.add(softmax_layer())
 
 #loading train data and training
 
-path_dataset = 'C:/Development/MachineLearning/NeuralNetworks/datasets/vanilla_mnist_dataset/'
+path_dataset = 'D:/Dev Projects/Machine Learning/NeuralNetworks/Datasets/vanilla_mnist_dataset/'
 
 x_train = idx2numpy.convert_from_file(path_dataset + 'train-images.idx3-ubyte')
 y_train = idx2numpy.convert_from_file(path_dataset + 'train-labels.idx1-ubyte')
 
 x_train = (x_train / 255.0 * 0.99) + 0.01
 
-nn.train(x_train,y_train,1)
+nn.train(x_train,y_train,1,'crossentropy')
 
 #loading test data and testing
 
@@ -451,4 +447,3 @@ for t in range(len(x_test)):
 scorecard_array = np.asarray(scorecard)
 
 print('performance is: ', scorecard_array.sum() / scorecard_array.size * 100 , '%')
-"""
