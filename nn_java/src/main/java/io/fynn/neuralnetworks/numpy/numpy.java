@@ -1,54 +1,36 @@
 package io.fynn.neuralnetworks.numpy;
 
+import java.util.Arrays;
+
 public class numpy{
 
-    public float[][][][] zeros4D(int a,int b, int c, int d){
-        float[][][][] output = new float[a][b][c][d];
+    public narray zeros(int... shape){
+        narray output = new narray(shape);
 
-        for(int i = 0; i < a; i++){
-            for( int j = 0 ;j < b; j ++){
-                for(int k = 0;k < c; k++ ){
-                    for(int l = 0; l < d; l++){
-                        output[i][j][k][l] = 0.0f;
-                    }
-                }
-            }
-        }
-        return output;
-    }
-
-    public float[][] zeros2D(int x, int y){
-        float[][] output = new float[x][y];
-        for(int i = 0; i< x; i++){
-            for(int j = 0; j < y; j++){
-                output[i][j] = 0.0f;
-            }
-        }
+        output.setAll(0.0f);
 
         return output;
     }
 
-    public float[][] normal(float center,float scale,int x, int y ){
-        float[][] output = zeros2D(x, y);
-        for(int i = 0; i< x; i++){
-            for(int j = 0; j < y; j++){
-                output[i][j] = randomNumber(-scale, scale, center);
-            }
+    public narray normal(float center,float scale,int... shape){
+        narray output = zeros(shape);
+        for(int i = 0; i < output.length(); i++){
+            output.array[i] = randomNumber(-scale, scale, center);
         }
         return output;
     }
 
-    public float[][] dot(float[][] X,float[][] Y){
-        if(X[0].length != Y.length){
-            return null;
+    public narray dot(narray X,narray Y) throws Exception{
+        if(X.shape[1] != Y.shape[0]){
+            throw new Exception("Can't compute shapes " + Arrays.toString(X.shape) + " and " + Arrays.toString(Y.shape) + "!");
         }
 
-        float[][] output = zeros2D(X.length, Y[0].length);
+        narray output = zeros(X.shape[0], Y.shape[1]);
 
-        for(int i = 0; i < X.length; i++){
-            for(int j = 0; j < Y[0].length; j++ ){
-                for(int k = 0; k < X[0].length; k++){
-                    output[i][j] = X[i][k] * Y[k][j];
+        for(int i = 0; i < X.shape[0]; i++){
+            for(int j = 0; j < Y.shape[1]; j++ ){
+                for(int k = 0; k < X.shape[1]; k++){
+                    output.set(X.get(i,k)[0] * Y.get(k,j)[0], i,j);
                 }
             } 
         }
@@ -56,63 +38,49 @@ public class numpy{
         return output;
     }
 
-    public float max(float[][][][] X){
+    public float max(narray X){
         float output = 0.0f;
 
-        for(int i = 0; i < X[0].length; i++){
-            for(int j = 0; j < X[1].length; j++){
-                for(int k = 0; k < X[2].length; k++){
-                    for(int l = 0; l < X[3].length; l++){
-                        if(X[i][j][k][l] > output){
-                            output = X[i][j][k][l];
-                        }
-                    }
-                }
-            }  
-        }
-
-        return output;
-    }
-
-    public float max(float[][] X){
-        float output = 0.0f;
-
-        for(int i = 0; i < X[0].length; i++){
-            for(int j = 0; j < X[1].length; j++){
-                if(X[i][j] > output){
-                    output = X[i][j];
-                }
+        for(int i = 0; i < X.length(); i++){
+            if(output < X.array[i]){
+                output = X.array[i];
             }
         }
 
         return output;
     }
+    
+    public int argmax(narray X){
+        float max = 0.0f;
+        int argmax = 0;
+        for(int i = 0; i < X.length(); i++){
+            if(max < X.getArray()[i]){
+                max = X.getArray()[i];
+                argmax = i;
+            }
+        }
 
-    public float sum(float[][] X){
+        return argmax;
+    }
+
+    public float sum(narray X){
 
         float output = 0.0f;
 
-        for(int i = 0; i < X[0].length; i++){
-            for(int j = 0; j < X[1].length; j++){
-                output += X[i][j];
-            }
+        for(int i = 0; i < X.length(); i++){
+                output += X.array[i];
         }
 
         return output;
     }
 
-    public float sum(float[][][][] X){
+    public narray transpose2D(narray X) throws Exception{
+        narray output = new narray(X.shape[1],X.shape[0]);
 
-        float output = 0.0f;
-
-        for(int i = 0; i < X[0].length; i++){
-            for(int j = 0; j < X[1].length; j++){
-                for(int k = 0; k < X[2].length; k++){
-                    for(int l = 0; l < X[3].length; l++){
-                        output += X[i][j][k][l];
-                    }
-                }
-            } 
+        for(int i = 0; i < X.shape[0]; i++){
+            for(int j = 0; j < X.shape[1]; j++){
+                output.set(X.get(i,j)[0], j,i);
+            }
         }
 
         return output;

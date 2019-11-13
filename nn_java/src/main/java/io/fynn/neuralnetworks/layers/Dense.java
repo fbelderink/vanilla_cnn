@@ -1,21 +1,23 @@
 package io.fynn.neuralnetworks.layers;
 
 import io.fynn.neuralnetworks.numpy.*;
+
+import java.util.Arrays;
+
 import io.fynn.neuralnetworks.layers.activations.*;
 
-public class Dense{
+public class Dense extends Layer{
 
     public static numpy np = new numpy();
 
-    public static int nodes;
-    public static float lr;
-    public static String activation;
-    public static Activation activation_function;
+    public int nodes;
+    public float lr;
+    public String activation;
+    public Activation activation_function;
 
-    public float[][] input;
-    public float[][] output;
-    public float[][] W;
-
+    public narray input;
+    public narray output;
+    public narray W;
 
     public Dense(int nodes,float lr,String activation){
         this.nodes = nodes;
@@ -28,29 +30,59 @@ public class Dense{
         this(nodes,lr,"linear");
     }
 
-    public float[][] setWeights(int x, int y){
+    public narray setWeights(int x, int y){
         if(this.activation.equals("relu")){
-            return np.normal(0.0f, (float) (Math.pow(2 /  x, 0.5)), x, y);
+            return np.normal(0.0f, (float) (Math.pow(2.0f / (float) (x), 0.5)), x, y);
         }
 
-        return np.normal(0.0f, (float) (Math.pow(2 / x, 0.5)), x, y);
+        return np.normal(0.0f, (float) (Math.pow(1.0f / (float) (x), 0.5)), x, y);
     }
 
-    public float[][] feedfoward(float[][] X){
+    @Override
+    public narray feedforward(narray X) throws Exception{
 
         this.input = X;
 
-        if(W == null){
-            W = setWeights(this.nodes, X[0].length);
+        if(this.W == null){
+            this.W = setWeights(this.nodes,X.shape(0));
+            System.out.println(this.W.get1D(0));
         }
 
-        output = this.activation_function.feedfoward(np.dot(X, W));
+        this.output = this.activation_function.feedfoward(np.dot(W,X));
 
-        return output;
+        return this.output;
     }
 
-    public void backprop(){
+    @Override
+    public narray backprop(narray E, String loss, int layer_i) throws Exception{
+        narray next_error = np.dot(np.transpose2D(this.W), E);
 
+        if(loss.equals("crossentropy") && layer_i == 0){
+            this.W = this.W.subtract(np.dot(E, np.transpose2D(this.input)).multiply(this.lr).getArray());
+        }else{
+            this.W = this.W.subtract(np.dot(E.multiply(this.activation_function.backprop(this.output).getArray()),np.transpose2D(this.input)).multiply(this.lr).getArray());
+        }
+
+        return next_error;
+    }
+
+    @Override
+    public narray getInput(){
+        return this.input;
+    }
+
+    public narray getWeigths(){
+        return this.W;
+    }
+
+    @Override
+    public narray getOutput(){
+        return this.output;
+    }
+
+    @Override
+    public int getNodes(){
+        return this.nodes;
     }
 
 }

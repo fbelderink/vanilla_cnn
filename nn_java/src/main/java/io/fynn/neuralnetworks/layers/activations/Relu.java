@@ -1,61 +1,33 @@
 package io.fynn.neuralnetworks.layers.activations;
 
+import io.fynn.neuralnetworks.numpy.narray;
+
 public class Relu{
-    
-    public float[][][][] feedfoward(float[][][][] X){
-        for(int i = 0; i < X[0].length; i++){
-            for(int j = 0; j < X[1].length; j++){
-                for(int k = 0; k < X[2].length; k++){
-                    for(int l = 0; l < X[3].length; l++){
-                        if(X[i][j][k][l] <= 0){
-                            X[i][j][k][l] = 0.0f;
-                        }
-                    }
-                }
+
+    public narray feedfoward(narray X) throws Exception{
+        narray output = new narray(X.shape());
+
+        for(int i = 0; i < output.length(); i++){
+            if(X.get1D(i) <= 0){
+                    output.set(0.0f, i);
             }
         }
 
-        return X;
+        return output;
     }
 
-    public float[][] feedfoward(float[][] X){
-        for(int i = 0; i < X[0].length; i++){
-            for(int j = 0; j < X[1].length; j++){
-                if(X[i][j] <= 0){
-                    X[i][j] = 0.0f; 
-                }
-            }
-        }
-        return X;
-    }
+    public narray backprop(narray X) throws Exception{
+        narray output = new narray(X.shape());
 
-    public float[][] backprop(float[][] X){
-        for(int i = 0; i < X[0].length; i++){
-            for(int j = 0; j < X[1].length; j++){
-                if(X[i][j] <= 0){
-                    X[i][j] = 0.0f;
-                }else{
-                    X[i][j] = 1.0f;
+        for(int i = 0; i < output.length(); i++){
+                if(X.get1D(i) <= 0){
+                    output.set(0.0f, i);
                 }
-            } 
+                else{
+                    output.set(1.0f, i);
+                }
         }
-        return X;
-    }
 
-    public float[][][][] backprop(float[][][][] X){
-        for(int i = 0; i < X[0].length; i++){
-            for(int j = 0; j < X[1].length; j++){
-                for(int k = 0; k < X[2].length; k++){
-                    for(int l = 0; l < X[3].length; l++){
-                        if(X[i][j][k][l] <= 0){
-                            X[i][j][k][l] = 0.0f;
-                        }else{
-                            X[i][j][k][l] = 1.0f;
-                        }
-                    }
-                }
-            }
-        }
-        return X;
+        return output;    
     }
 }
