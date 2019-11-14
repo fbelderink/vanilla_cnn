@@ -24,7 +24,7 @@ public class NeuralNetwork{
 			input = layers.get(i).feedforward(input);
 		}
 		
-		//System.out.println(this.layers.get(this.layers.size() - 1).getOutput().asString());
+		//System.out.println(np.argmax(this.layers.get(this.layers.size() - 1).getOutput()));
 
 		return this.layers.get(this.layers.size() - 1).getOutput();
 	}
@@ -58,7 +58,7 @@ public class NeuralNetwork{
 						sum += scorecard.get(i);
 					}
 
-					System.out.println(t + "/" + y_train.length() + " accuracy:" + (sum / 1000 * 100) + "%\n");
+					System.out.println(t + "/" + y_train.length() + " accuracy:" + (sum / 1000 * 100) + "%");
 					scorecard.clear();
 				}
 

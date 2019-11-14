@@ -201,6 +201,33 @@ public class narray {
         return this;
     }
 
+    public narray slice(int[]... fromToPairs) throws Exception{
+        for(int i = 0; i < fromToPairs.length; i++){
+            if(fromToPairs[i].length != 2 && fromToPairs.length <= this.shape.length){
+                throw new Exception("Datatype not understood!");
+            }
+        }
+
+        narray output = this;
+        int pos = 0;
+        int to = 0;
+        for(int i = 0; i < fromToPairs.length; i++){
+            int a = 1;
+            for(int j = i + 1; j < this.shape.length; j++){
+                a *= this.shape[j];
+            }
+            pos = a * fromToPairs[i][0];
+            to = pos + a * (fromToPairs[i][1] - fromToPairs[i][0]);
+
+            int[] shape = output.shape;
+            shape[i] = (fromToPairs[i][1] - fromToPairs[i][0]);
+            output = new narray(Arrays.copyOfRange(output.array, pos, to), shape);
+        }
+
+        return output;
+
+    }
+
     public float[] getArray(){
         return this.array;
     }

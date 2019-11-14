@@ -2,8 +2,6 @@ package io.fynn.neuralnetworks.layers;
 
 import io.fynn.neuralnetworks.numpy.*;
 
-import java.util.Arrays;
-
 import io.fynn.neuralnetworks.layers.activations.*;
 
 public class Dense extends Layer{
@@ -15,9 +13,7 @@ public class Dense extends Layer{
     public String activation;
     public Activation activation_function;
 
-    public narray input;
-    public narray output;
-    public narray W;
+    public narray input,W,output;
 
     public Dense(int nodes,float lr,String activation){
         this.nodes = nodes;
@@ -45,7 +41,6 @@ public class Dense extends Layer{
 
         if(this.W == null){
             this.W = setWeights(this.nodes,X.shape(0));
-            System.out.println(this.W.get1D(0));
         }
 
         this.output = this.activation_function.feedfoward(np.dot(W,X));
@@ -78,11 +73,6 @@ public class Dense extends Layer{
     @Override
     public narray getOutput(){
         return this.output;
-    }
-
-    @Override
-    public int getNodes(){
-        return this.nodes;
     }
 
 }

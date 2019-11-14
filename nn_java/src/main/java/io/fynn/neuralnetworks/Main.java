@@ -1,7 +1,6 @@
 package io.fynn.neuralnetworks;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,6 +20,10 @@ public class Main {
 		nn.add(new Dense(10, 0.001f, "sigmoid"));
 
 		String path_datasets = "D:/Dev Projects/Machine Learning/NeuralNetworks/Datasets/mnist_dataset_csv/";
+		
+		narray a = np.normal(0.0f, 1.0f, 2,2,2);
+		System.out.println(a.asString());
+		System.out.println(a.slice(new int[]{0,1},new int[]{1,2},new int[]{0,1}).asString());
 
 		narray[] datasets = loadMNIST(path_datasets + "mnist_train.csv");
 		narray x_train = datasets[0];
@@ -28,7 +31,7 @@ public class Main {
 
 		x_train = x_train.divide(255.0f).multiply(0.99f).add(0.01f);
 
-		//nn.train(x_train, y_train, 1, "mse");
+		nn.train(x_train, y_train, 1, "mse");
 
 		narray[] test_datasets = loadMNIST(path_datasets + "mnist_test.csv");
 		narray x_test = test_datasets[0];
@@ -39,7 +42,7 @@ public class Main {
 		ArrayList<Float> scorecard = new ArrayList<Float>();
 
 		for(int t = 0; t < x_test.shape(0); t++){
-			narray input = new narray(x_train.get(t), Arrays.copyOfRange(x_train.shape(), 1, x_train.shape().length));
+			narray input = new narray(x_test.get(t), Arrays.copyOfRange(x_test.shape(), 1, x_test.shape().length));
 			if(np.argmax(nn.predict(input)) ==(int) (y_test.get(t)[0])){
 				scorecard.add(1.0f);
 			}else{

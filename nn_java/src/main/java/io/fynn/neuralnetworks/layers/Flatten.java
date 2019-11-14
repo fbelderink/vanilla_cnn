@@ -5,7 +5,6 @@ import io.fynn.neuralnetworks.numpy.narray;
 public class Flatten extends Layer{
 
     narray input,output;
-    public int nodes;
 
     @Override
     public narray feedforward(narray X){
@@ -17,7 +16,6 @@ public class Flatten extends Layer{
         }
 
         this.output = new narray(X.getArray(), a,1);
-        this.nodes = a;
 
         return this.output;
     }
@@ -35,11 +33,6 @@ public class Flatten extends Layer{
     @Override
     public narray getOutput(){
         return this.output;
-    }
-
-    @Override
-    public int getNodes(){
-        return this.nodes;
     }
 
 }

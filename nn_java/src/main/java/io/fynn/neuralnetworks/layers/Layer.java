@@ -9,6 +9,5 @@ public abstract class Layer{
     
     public abstract narray getInput();
     public abstract narray getOutput();
-    public abstract int getNodes();
 
 }

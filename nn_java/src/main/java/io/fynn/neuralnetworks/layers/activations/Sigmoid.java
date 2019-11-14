@@ -1,7 +1,5 @@
 package io.fynn.neuralnetworks.layers.activations;
 
-import java.util.Arrays;
-
 import io.fynn.neuralnetworks.numpy.narray;
 
 public class Sigmoid{

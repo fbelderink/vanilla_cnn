@@ -30,7 +30,7 @@ public class numpy{
         for(int i = 0; i < X.shape[0]; i++){
             for(int j = 0; j < Y.shape[1]; j++ ){
                 for(int k = 0; k < X.shape[1]; k++){
-                    output.set(X.get(i,k)[0] * Y.get(k,j)[0], i,j);
+                    output.array[i * output.shape(1) + j] += X.get(i,k)[0] * Y.get(k,j)[0];
                 }
             } 
         }
