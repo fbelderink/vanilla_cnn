@@ -19,7 +19,7 @@ public class Dense extends Layer{
         this.nodes = nodes;
         this.lr = lr;
         this.activation = activation;
-        this.activation_function = new Activation(activation);
+        this.activation_function = new Activation(activation,false);
      }
 
     public Dense(int nodes,float lr){
@@ -43,7 +43,7 @@ public class Dense extends Layer{
             this.W = setWeights(this.nodes,X.shape(0));
         }
 
-        this.output = this.activation_function.feedfoward(np.dot(W,X));
+        this.output = this.activation_function.feedforward(np.dot(W,X));
 
         return this.output;
     }
@@ -55,7 +55,7 @@ public class Dense extends Layer{
         if(loss.equals("crossentropy") && layer_i == 0){
             this.W = this.W.subtract(np.dot(E, np.transpose2D(this.input)).multiply(this.lr).getArray());
         }else{
-            this.W = this.W.subtract(np.dot(E.multiply(this.activation_function.backprop(this.output).getArray()),np.transpose2D(this.input)).multiply(this.lr).getArray());
+            this.W = this.W.subtract(np.dot(E.multiply(this.activation_function.backprop(this.output,loss,layer_i).getArray()),np.transpose2D(this.input)).multiply(this.lr).getArray());
         }
 
         return next_error;

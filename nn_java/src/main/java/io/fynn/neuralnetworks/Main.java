@@ -12,18 +12,20 @@ import io.fynn.neuralnetworks.numpy.*;
 public class Main {
 
 	public static numpy np = new numpy();
+
 	public static void main(String[] args) throws Exception {
 		NeuralNetwork nn = new NeuralNetwork();
 
 		nn.add(new Flatten());
-		nn.add(new Dense(128, 0.001f, "sigmoid"));
-		nn.add(new Dense(10, 0.001f, "sigmoid"));
+		nn.add(new Dense(128, 0.001f,"sigmoid"));
+		nn.add(new Dense(10, 0.001f,"sigmoid"));
+
+		Convolution conv = new Convolution(5, new tuple<Integer,Integer>(2, 2),new String[]{"padding","same"});
+		narray a = np.normal(0, 1, 3,3,3);
+		System.out.println(Arrays.toString(a.get(0)));
+		System.out.println(Arrays.toString(conv.feedforward(a).get(0)));
 
 		String path_datasets = "D:/Dev Projects/Machine Learning/NeuralNetworks/Datasets/mnist_dataset_csv/";
-		
-		narray a = np.normal(0.0f, 1.0f, 2,2,2);
-		System.out.println(a.asString());
-		System.out.println(a.slice(new int[]{0,1},new int[]{1,2},new int[]{0,1}).asString());
 
 		narray[] datasets = loadMNIST(path_datasets + "mnist_train.csv");
 		narray x_train = datasets[0];
