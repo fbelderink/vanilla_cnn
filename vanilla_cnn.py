@@ -17,40 +17,49 @@ class NeuralNetwork:
 	def predict(self,input):
 
 		for layer in self.layers:
-			
 		 	input = layer.feedfoward(input)
+		 	pass
 	
 		return self.layers[len(self.layers) - 1].output
 
 	def train(self,x_train,y_train,epochs,loss):
-
+			scorecard = []
 			for e in range(epochs):
 				print('epoch', e)
 				for t in range(len(x_train)):
-					if t % 1000 == 0:
-					sys.stdout.write(str(t) + '/' + str(len(x_train)) + '\n')
-					sys.stdout.flush()
 						
 					#feed foward
-
-					input=x_train[t]
+					input = x_train[t]
+					
 					if len(input.shape) == 2:
 						input = input.reshape(1,input.shape[0],input.shape[1])
-
-					self.predict(input)
+					
+					print(np.argmax(self.predict(input)))
+					#print(np.argmax(test))
 
 					self.layers.reverse()	
 
-					targets = np.zeros(10) + 0.01
-					targets[y_train[t]] = 0.99
+					targets = np.zeros(10)
+					targets[y_train[t]] = 1	
+
+					if np.argmax(self.layers[0].output) == y_train[t]:
+						scorecard.append(1)
+					else:
+						scorecard.append(0)
+
+					if t % 10 == 0 and t != 0:
+						sys.stdout.write(str(t) + '/' + str(len(x_train)) + ' accuracy:' + str(sum(scorecard) / 10 * 100) + '%' + '\n')
+						sys.stdout.flush()
+						scorecard.clear()
+
 
 					targets = np.array(targets,ndmin=2).T
 
-					error = error = self.derivative_errors[loss](targets,self.layers[0].output)
+					error = self.derivative_errors[loss](targets,self.layers[0].output)
 
 					for layer_i in range(len(self.layers)):
 						error = self.layers[layer_i].backprop(error,loss,layer_i)
-						pass
+					pass
 					
 					self.layers.reverse()
 				pass
@@ -99,12 +108,10 @@ class dense_layer:
 
 	def setWeights(self,x,y):
 
-		if self.activation == 'sigmoid' or self.activation == 'tanh' or self.activation == 'softmax':
+		if self.activation == 'sigmoid' or self.activation == 'tanh' or self.activation == 'softmax' or self.activation == 'linear':
 			self.W = np.random.normal(0.0,pow(1 / float(x), 0.5),(x,y))
 		elif self.activation == 'relu':
 			self.W = np.random.normal(0.0,pow(2 / float(x), 0.5),(x,y))
-		else:
-			self.W = np.random.rand(x,y)
 	
 	pass
 
@@ -229,7 +236,7 @@ class conv_layer:
 			for i in range(self.filters[filter_i].shape[0]):
 				for j in range(self.filters[filter_i].shape[1]):
 					W = self.input[i * self.strides[0] : i * self.strides[0] + E[filter_i].shape[0],j * self.strides[1] : j * self.strides[1] + E[filter_i].shape[1]]
-					self.filters[filter_i,i,j] -= self.lr * np.sum(W * E[filter_i] * self.derivatives[self.activation](self.output)) 
+					self.filters[filter_i,i,j] -= self.lr * np.sum(W * E[filter_i] * self.derivatives[self.activation](self.output[filter_i])) 
 					pass
 
 				pass
@@ -245,7 +252,7 @@ class conv_layer:
 
 		if self.padding == 'same':
 			padding_size_i = ((output_dim[0] - 1) * self.strides[0] + self.filter_size[0]) - output_dim[0]
-			padding_size_j = ((output_dim[1] - 1) * self.strides[1] + self.filter_size[0]) - output_dim[1]
+			padding_size_j = ((output_dim[1] - 1) * self.strides[1] + self.filter_size[1]) - output_dim[1]
 
 			X = self.zeropad(X,(padding_size_i,padding_size_j))
 
@@ -272,7 +279,7 @@ class conv_layer:
 	def dilate(self,X,dilation_size : tuple):
 
 		output = np.zeros((X.shape[0] + (X.shape[0] - 1) * dilation_size[0], X.shape[1] + (X.shape[1] - 1) * dilation_size[1]))
-
+ 
 		for i in range(X.shape[0]):
 			for j in range(X.shape[1]):
 				output[i * dilation_size[0] + i,j * dilation_size[1] + j] = X[i,j]
@@ -289,6 +296,7 @@ class pooling_layer:
 		
 		self.type = type
 		self.strides = strides
+		self.pooling_size = pooling_size
 		
 		pass
 
@@ -308,11 +316,10 @@ class pooling_layer:
 		for image_i in range(image_layers):
 			for i in range(output_dim_i):
 				for j in range(output_dim_j):
-
 					W = X[image_i,i * self.strides[0] : i * self.strides[0] + self.pooling_size[0],j * self.strides[1] : j * self.strides[1] + self.pooling_size[1]]
 					if self.type == 'max':
 						pooled_features[image_i,i,j] = np.max(W)
-						self.where[image_i,i,j] = [np.argwhere(W == np.max(W))] 
+						self.where[image_i,i,j] = [np.argwhere(W == np.max(W))]
 					elif self.type == 'avg':
 						pooled_features[image_i,i,j] = np.sum(W) / (W.shape[0] * W.shape[1])	
 						pass
@@ -323,7 +330,6 @@ class pooling_layer:
 		pass
 
 	def backprop(self,E,loss,layer_i):
-			
 		unpooled_features = np.zeros((self.input.shape[0],self.input.shape[1],self.input.shape[2]))
 
 		if self.type == 'max':
@@ -340,7 +346,7 @@ class pooling_layer:
 
 				pass	
 
-			print(unpooled_features[0,:,:])
+			print(unpooled_features)
 
 		elif self.type == 'avg':
 			pass
@@ -408,12 +414,13 @@ class softmax_layer:
 
 nn = NeuralNetwork()
 
-nn.add(conv_layer(64,(2,2),padding='same'))
+nn.add(conv_layer(10,(2,2),padding='same'))
+nn.add(relu_layer())
+nn.add(conv_layer(10,(2,2),padding='same'))
 nn.add(relu_layer())
 nn.add(flatten())
-nn.add(dense_layer(64,0.001))
-nn.add(dense_layer(10,0.001))
-nn.add(softmax_layer())
+nn.add(dense_layer(128,0.001,activation = "relu"))
+nn.add(dense_layer(10,0.001,activation = "softmax"))
 
 #loading train data and training
 

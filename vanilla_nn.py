@@ -169,31 +169,27 @@ class flatten:
 nn = NeuralNetwork()
 
 nn.add(flatten())
-nn.add(dense_layer(128,0.001,activation = "relu"))
-nn.add(dense_layer(128,0.001,activation = "relu"))
-nn.add(dense_layer(10,0.001, activation = "softmax"))
+nn.add(dense_layer(128,0.001,activation = "sigmoid"))
+nn.add(dense_layer(128,0.001,activation = "sigmoid"))
+nn.add(dense_layer(10,0.001, activation = "sigmoid"))
 
 #loading train data and training
-
-path_dataset = 'C:/Development/MachineLearning/NeuralNetworks/datasets/vanilla_mnist_dataset/'
+"""
+path_dataset = 'D:/Dev Projects/Machine Learning/NeuralNetworks/Datasets/vanilla_mnist_dataset/'
 
 x_train = idx2numpy.convert_from_file(path_dataset + 'train-images.idx3-ubyte')
 y_train = idx2numpy.convert_from_file(path_dataset + 'train-labels.idx1-ubyte')
 
 x_train = (x_train / 255.0 * 0.99) + 0.01
 
-#nn.predict(x_train[0])
 nn.train(x_train,y_train,1,loss='crossentropy')
 
-"""
+
 flatX_train = np.zeros((x_train.shape[0],np.prod(x_train.shape[1:])))
 for i in range(x_train.shape[0]):
 	flatX_train[i,:] = x_train[i].flatten(order='C')
 
 flatX_train = (flatX_train / 255.0 * 0.99) + 0.01
-"""
-
-#nn.train(flatX_train,y_train,1)
 
 #loading test data and testing
 
@@ -205,6 +201,7 @@ x_test = (x_test / 255.0 * 0.99) + 0.01
 scorecard = []
 
 for t in range(len(x_test)):
+	print(nn.predict(x_test[t]))
 	if np.argmax(nn.predict(x_test[t])) == y_test[t]:
 		scorecard.append(1)
 	else:
@@ -216,3 +213,4 @@ for t in range(len(x_test)):
 scorecard_array = np.asarray(scorecard)
 
 print('performance is: ', scorecard_array.sum() / scorecard_array.size * 100 , '%')
+"""
